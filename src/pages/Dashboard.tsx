@@ -16,7 +16,7 @@ interface SandboxStatus {
   guardrailViolations?: number;
 }
 
-const Dashboard = () => {
+export const Dashboard = () => {
   const [sandboxStatus, setSandboxStatus] = useState<SandboxStatus | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
@@ -85,9 +85,9 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">PlayGround Dashboard</h1>
+    <div className="min-h-screen bg-background">
+      <div className="flex items-center justify-between px-4 py-6">
+        <h1 className="text-3xl font-bold text-foreground">PlayGround Dashboard</h1>
         <div className="flex items-center gap-2">
           {sandboxStatus?.status === "running" ? (
             <Badge variant="destructive" className="animate-pulse">
@@ -102,14 +102,14 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 px-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Status</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Status</CardTitle>
             <Cpu className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-foreground">
               {sandboxStatus?.status === "running" ? "Active" : 
                sandboxStatus?.status === "stopped" ? "Stopped" : "Idle"}
             </div>
@@ -121,11 +121,11 @@ const Dashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Uptime</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Uptime</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-foreground">
               {sandboxStatus?.startTime 
                 ? Math.floor((Date.now() - sandboxStatus.startTime.getTime()) / 1000) + "s"
                 : "0s"}
@@ -138,11 +138,11 @@ const Dashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Guardrail Alerts</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Guardrail Alerts</CardTitle>
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{guardrailAlerts}</div>
+            <div className="text-2xl font-bold text-foreground">{guardrailAlerts}</div>
             <p className="text-xs text-muted-foreground">
               LLM rule violations blocked
             </p>
@@ -151,11 +151,11 @@ const Dashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Network</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Network</CardTitle>
             <Network className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-foreground">
               {sandboxStatus?.networkBlocked ? "Blocked" : "Open"}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -165,7 +165,7 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-4">
         <Card>
           <CardHeader>
             <CardTitle>Control Panel</CardTitle>
@@ -235,7 +235,7 @@ const Dashboard = () => {
                 </div>
               ) : (
                 logs.map((log, index) => (
-                  <div key={index} className="text-xs">
+                  <div key={index} className="text-xs text-foreground">
                     {log}
                   </div>
                 ))
@@ -247,5 +247,3 @@ const Dashboard = () => {
     </div>
   );
 };
-
-export default Dashboard;

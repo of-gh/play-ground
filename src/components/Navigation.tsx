@@ -3,18 +3,22 @@ import { Home, Settings, FileText, Shield } from "lucide-react";
 
 const Navigation = () => {
   return (
-    <nav className="border-b bg-background">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Shield className="h-6 w-6 text-primary" />
-          <span className="text-xl font-bold">PlayGround</span>
+    <nav className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
+      <div className="container flex h-16 items-center justify-between px-4 md:px-6">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <Shield className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <span className="text-xl font-bold text-foreground">PlayGround</span>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-1">
           <NavLink
             to="/"
-            className={({ isActive }) => 
-              `flex items-center gap-2 text-sm font-medium transition-colors ${
-                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            className={({ isActive }) =>
+              `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
               }`
             }
           >
@@ -23,9 +27,11 @@ const Navigation = () => {
           </NavLink>
           <NavLink
             to="/config"
-            className={({ isActive }) => 
-              `flex items-center gap-2 text-sm font-medium transition-colors ${
-                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            className={({ isActive }) =>
+              `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
               }`
             }
           >
@@ -34,9 +40,11 @@ const Navigation = () => {
           </NavLink>
           <NavLink
             to="/logs"
-            className={({ isActive }) => 
-              `flex items-center gap-2 text-sm font-medium transition-colors ${
-                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            className={({ isActive }) =>
+              `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
               }`
             }
           >
