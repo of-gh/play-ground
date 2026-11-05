@@ -5,28 +5,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Code } from "lucide-react";
+import { Code, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { apiService, SandboxConfig } from "@/lib/api";
 
-interface TestConfig {
-  agentPrompt: string;
-  modelEndpoint: string;
-  testLimits: {
-    maxSteps: number;
-    maxTimeSeconds: number;
-    maxMemoryMB: number;
-  };
-  networkRules: {
-    blockPublicInternet: boolean;
-    mockEndpoints: string[];
-  };
-  guardrailRules: {
-    blockFileWrites: boolean;
-    blockShellCommands: boolean;
-    riskThreshold: number;
-  };
-}
-
-const DEFAULT_CONFIG: TestConfig = {
+const DEFAULT_CONFIG: SandboxConfig = {
   agentPrompt: "You are a helpful AI assistant. Follow all safety guidelines.",
   modelEndpoint: "http://localhost:8080/v1/chat/completions",
   testLimits: {
@@ -46,9 +28,11 @@ const DEFAULT_CONFIG: TestConfig = {
 };
 
 const Config = () => {
-  const [config, setConfig] = useState<TestConfig>(DEFAULT_CONFIG);
+  const [config, setConfig] = useState<SandboxConfig>(DEFAULT_CONFIG);
   const [jsonConfig, setJsonConfig] = useState(JSON.stringify(DEFAULT_CONFIG, null, 2));
   const [isJsonMode, setIsJsonMode] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<"idle" | "testing" | "success" | "error">("idle");
+  const [connectionError, setConnectionError] = useState<string>("");
 
   const handleJsonChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     try {
@@ -67,13 +51,52 @@ const Config = () => {
 
   const handleNestedChange = (section: string, key: string, value: any) => {
     setConfig(prev => {
-      const sectionObj = prev[section as keyof TestConfig] as Record<string, any>;
+      const sectionObj = prev[section as keyof SandboxConfig] as Record<string, any>;
       return {
         ...prev,
         [section]: { ...sectionObj, [key]: value }
       };
     });
     setJsonConfig(JSON.stringify(config, null, 2));
+  };
+
+  const saveConfig = () => {
+    apiService.setConfig(config);
+    localStorage.setItem("playground-config", JSON.stringify(config));
+    setConnectionStatus("success");
+    setTimeout(() => setConnectionStatus("idle"), 2000);
+  };
+
+  const testConnection = async () => {
+    setConnectionStatus("testing");
+    setConnectionError("");
+    
+    try {
+      const success = await apiService.testConnection(config.modelEndpoint);
+      if (success) {
+        setConnectionStatus("success");
+      } else {
+        setConnectionStatus("error");
+        setConnectionError("Failed to connect to model endpoint");
+      }
+    } catch (error) {
+      setConnectionStatus("error");
+      setConnectionError(error instanceof Error ? error.message : "Connection failed");
+    }
+  };
+
+  const loadSavedConfig = () => {
+    const saved = localStorage.getItem("playground-config");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setConfig(parsed);
+        setJsonConfig(JSON.stringify(parsed, null, 2));
+        apiService.setConfig(parsed);
+      } catch {
+        // Ignore parse errors
+      }
+    }
   };
 
   return (
@@ -130,11 +153,32 @@ const Config = () => {
                 
                 <div className="space-y-2">
                   <Label>Model Endpoint</Label>
-                  <Input
-                    value={config.modelEndpoint}
-                    onChange={(e) => handleFieldChange("modelEndpoint", e.target.value)}
-                    placeholder="http://localhost:8080/v1/chat/completions"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={config.modelEndpoint}
+                      onChange={(e) => handleFieldChange("modelEndpoint", e.target.value)}
+                      placeholder="http://localhost:8080/v1/chat/completions"
+                      className="flex-1"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={testConnection}
+                      disabled={connectionStatus === "testing"}
+                    >
+                      {connectionStatus === "testing" ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : connectionStatus === "success" ? (
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                      ) : connectionStatus === "error" ? (
+                        <AlertCircle className="w-4 h-4 text-red-500" />
+                      ) : (
+                        "Test"
+                      )}
+                    </Button>
+                  </div>
+                  {connectionError && (
+                    <p className="text-xs text-red-500">{connectionError}</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -251,12 +295,12 @@ const Config = () => {
                   />
                 </div>
               </CardContent>
-            </Card>
-          </div>
-        )}
+                          </Card>
+                        </div>
+                      )}
 
         <div className="flex justify-end mt-6">
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={saveConfig}>
             <Code className="w-4 h-4 mr-2" />
             Save Configuration
           </Button>

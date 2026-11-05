@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Play, Square, Activity, Shield, AlertTriangle, Clock, Cpu, Network } from "lucide-react";
+import { useRef } from "react";
+import { apiService, LLMMessage, ExecutionResult } from "@/lib/api";
 
 interface SandboxStatus {
   id: string;
@@ -16,11 +18,14 @@ interface SandboxStatus {
   guardrailViolations?: number;
 }
 
-const Dashboard = () => {
+export const Dashboard = () => {
   const [sandboxStatus, setSandboxStatus] = useState<SandboxStatus | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
   const [guardrailAlerts, setGuardrailAlerts] = useState<number>(0);
+  const [terminalOutput, setTerminalOutput] = useState<string>("");
+  const [isExecuting, setIsExecuting] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const startSandbox = async () => {
     setIsRunning(true);
@@ -83,6 +88,54 @@ const Dashboard = () => {
       setSandboxStatus(prev => prev ? { ...prev, status: "stopped" } : null);
     }, 100);
   };
+
+  const executeAgent = async (userPrompt: string) => {
+    if (!userPrompt.trim()) return;
+    
+    setIsExecuting(true);
+    setTerminalOutput("");
+    setGuardrailAlerts(prev => prev + 1);
+    
+    apiService.executeAgent(
+      userPrompt,
+      (chunk: string) => {
+        setTerminalOutput(prev => prev + chunk);
+      },
+      (result: ExecutionResult) => {
+        setIsExecuting(false);
+        setLogs(prev => [
+          ...prev,
+          `[${new Date().toLocaleTimeString()}] Agent execution completed in ${result.executionTime}ms`,
+          result.output ? `[OUTPUT] ${result.output}` : ""
+        ]);
+        
+        setSandboxStatus(prev => prev ? { ...prev, guardrailViolations: (prev?.guardrailViolations ?? 0) + result.guardrailViolations } : null);
+      },
+      (error: Error) => {
+        setIsExecuting(false);
+        setTerminalOutput(prev => prev + `\n[ERROR] ${error.message}\n`);
+        setLogs(prev => [
+          ...prev,
+          `[${new Date().toLocaleTimeString()}] Agent execution error: ${error.message}`
+        ]);
+      }
+    );
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      const userPrompt = inputRef.current?.value || "";
+      executeAgent(userPrompt);
+      inputRef.current!.value = "";
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      apiService.abort();
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -222,30 +275,69 @@ const Dashboard = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>System Logs</CardTitle>
+            <CardTitle>Agent Terminal</CardTitle>
             <CardDescription>
-              Real-time sandbox activity and guardrail alerts
+              Stream LLM responses and guardrail alerts in real-time
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2 max-h-64 overflow-y-auto font-mono text-sm">
-              {logs.length === 0 ? (
-                <div className="text-muted-foreground text-center py-4">
-                  No logs yet. Start the sandbox to see activity.
-                </div>
-              ) : (
-                logs.map((log, index) => (
-                  <div key={index} className="text-xs text-foreground">
-                    {log}
+          <CardContent className="space-y-4 h-96">
+            <div className="flex gap-2 mb-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => apiService.abort()}
+              >
+                Abort
+              </Button>
+            </div>
+            
+            <div 
+              className="space-y-2 max-h-80 overflow-y-auto font-mono text-sm bg-background/50 rounded-lg p-3"
+              onClick={e => e.target.focus()}
+            >
+              {terminalOutput ? (
+                terminalOutput.split("\n").map((line, i) => (
+                  <div key={i} className="text-foreground">
+                    {line}
                   </div>
                 ))
+              ) : (
+                <div className="text-muted-foreground text-center py-4">
+                  Enter a prompt below to start agent execution
+                </div>
               )}
             </div>
+            
+            {isExecuting && (
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Thinking...</span>
+                <span className="animate-spin inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full"></span>
+              </div>
+            )}
           </CardContent>
         </Card>
+      </div>
+
+      <div className="px-4 border-t border-border/20 py-6">
+        <div className="flex gap-2">
+          <textarea
+            ref={inputRef}
+            onKeyDown={handleKeyDown}
+            placeholder="Enter agent prompt (Ctrl+Enter to submit)..."
+            className="flex-1 bg-card border border-border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-primary"
+            rows={1}
+          />
+          <Button
+            variant="primary"
+            className="bg-primary text-primary-foreground px-4"
+            disabled={isRunning || isExecuting}
+            type="button"
+          >
+            <Play className="w-4 h-4 mr-1" />
+            Execute
+          </Button>
+        </div>
       </div>
     </div>
   );
 };
-
-export default Dashboard;
