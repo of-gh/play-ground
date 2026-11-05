@@ -16,7 +16,7 @@ interface SandboxStatus {
   guardrailViolations?: number;
 }
 
-export const Dashboard = () => {
+const Dashboard = () => {
   const [sandboxStatus, setSandboxStatus] = useState<SandboxStatus | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
@@ -247,3 +247,5 @@ export const Dashboard = () => {
     </div>
   );
 };
+
+export default Dashboard;

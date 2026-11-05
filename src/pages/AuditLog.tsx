@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Download, Filter, Clock, AlertTriangle, Shield, FileText } from "lucide-react";
+import { Search, Download, Shield, FileText, Clock } from "lucide-react";
 
 interface AuditEntry {
   id: string;
@@ -110,100 +110,102 @@ const AuditLog = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Audit Log</h1>
-        <Button onClick={handleExport} variant="outline">
-          <Download className="w-4 h-4 mr-2" />
-          Export JSONL
-        </Button>
-      </div>
+    <div className="min-h-screen bg-background">
+      <div className="px-4 py-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-foreground">Audit Log</h1>
+          <Button onClick={handleExport} variant="outline" className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Download className="w-4 h-4 mr-2" />
+            Export JSONL
+          </Button>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Session Audit Trail</CardTitle>
-          <CardDescription>
-            Immutable structured logs with microsecond timestamps
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                placeholder="Search logs..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+        <Card>
+          <CardHeader>
+            <CardTitle>Session Audit Trail</CardTitle>
+            <CardDescription>
+              Immutable structured logs with microsecond timestamps
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  placeholder="Search logs..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant={filterType === "all" ? "default" : "outline"}
+                  onClick={() => setFilterType("all")}
+                >
+                  All
+                </Button>
+                <Button
+                  variant={filterType === "system" ? "default" : "outline"}
+                  onClick={() => setFilterType("system")}
+                >
+                  System
+                </Button>
+                <Button
+                  variant={filterType === "guardrail" ? "default" : "outline"}
+                  onClick={() => setFilterType("guardrail")}
+                >
+                  Guardrail
+                </Button>
+                <Button
+                  variant={filterType === "agent" ? "default" : "outline"}
+                  onClick={() => setFilterType("agent")}
+                >
+                  Agent
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant={filterType === "all" ? "default" : "outline"}
-                onClick={() => setFilterType("all")}
-              >
-                All
-              </Button>
-              <Button
-                variant={filterType === "system" ? "default" : "outline"}
-                onClick={() => setFilterType("system")}
-              >
-                System
-              </Button>
-              <Button
-                variant={filterType === "guardrail" ? "default" : "outline"}
-                onClick={() => setFilterType("guardrail")}
-              >
-                Guardrail
-              </Button>
-              <Button
-                variant={filterType === "agent" ? "default" : "outline"}
-                onClick={() => setFilterType("agent")}
-              >
-                Agent
-              </Button>
-            </div>
-          </div>
 
-          <ScrollArea className="h-96 rounded-md border">
-            <div className="space-y-2 p-4">
-              {filteredLogs.length === 0 ? (
-                <div className="text-center text-muted-foreground py-8">
-                  No logs found matching your criteria.
-                </div>
-              ) : (
-                filteredLogs.map((log) => (
-                  <div
-                    key={log.id}
-                    className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                  >
-                    <div className="mt-1">
-                      {getTypeIcon(log.type)}
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(log.timestamp).toLocaleString()}
-                        </span>
-                        {getLevelBadge(log.level)}
-                        <Badge variant="outline" className="text-xs">
-                          {log.type}
-                        </Badge>
-                      </div>
-                      <p className="text-sm font-medium">{log.message}</p>
-                      {log.details && (
-                        <p className="text-xs text-muted-foreground font-mono">
-                          {log.details}
-                        </p>
-                      )}
-                    </div>
+            <ScrollArea className="h-96 rounded-md border">
+              <div className="space-y-2 p-4">
+                {filteredLogs.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-8">
+                    No logs found matching your criteria.
                   </div>
-                ))
-              )}
-            </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
+                ) : (
+                  filteredLogs.map((log) => (
+                    <div
+                      key={log.id}
+                      className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="mt-1">
+                        {getTypeIcon(log.type)}
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(log.timestamp).toLocaleString()}
+                          </span>
+                          {getLevelBadge(log.level)}
+                          <Badge variant="outline" className="text-xs">
+                            {log.type}
+                          </Badge>
+                        </div>
+                        <p className="text-sm font-medium text-foreground">{log.message}</p>
+                        {log.details && (
+                          <p className="text-xs text-muted-foreground font-mono">
+                            {log.details}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
