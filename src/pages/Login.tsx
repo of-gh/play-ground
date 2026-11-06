@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Shield } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
   const { signIn, signUp } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
@@ -18,14 +20,20 @@ function Login() {
     setError(null);
     setLoading(true);
     
-    const { error } = isSignUp 
+    const { error, user } = isSignUp 
       ? await signUp(email, password)
       : await signIn(email, password);
     
     if (error) {
       setError(error.message);
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+
+    // Wait a moment for auth state to update, then navigate
+    setTimeout(() => {
+      navigate("/", { replace: true });
+    }, 1000);
   };
 
   return (
