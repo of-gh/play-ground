@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { Home, Settings, FileText, Shield, LogOut, User } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
 
 const Navigation = () => {
   const { user, signOut } = useAuth();
